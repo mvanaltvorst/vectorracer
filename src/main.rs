@@ -1,7 +1,8 @@
 mod vector;
+use std::collections::HashMap;
 use vector::Vector;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 struct Coordinate {
     x: i32,
     y: i32,
@@ -13,9 +14,11 @@ impl Coordinate {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 struct GameState {
     c: Coordinate,
     v: Vector,
+    checkpoint: bool,
 }
 
 impl GameState {
@@ -23,18 +26,41 @@ impl GameState {
         GameState {
             c: Coordinate { x, y },
             v: Vector::zero(),
+            checkpoint: false
         }
     }
 
     fn children(&self, width: i32, height: i32) -> Vec<GameState> {
         self.v
-            .children(width, height)
+            .children()
             .iter()
             .map(|vector| GameState {
                 c: self.c.add(vector),
                 v: *vector,
+                checkpoint: self.checkpoint || (self.c.y <= 4)
             })
+            .filter(|vector| vector.c.x >= 0 && vector.c.y >= 0 && vector.c.x < width && vector.c.y < height)
             .collect()
+    }
+}
+
+struct StateCache {
+    previous: HashMap<GameState, GameState>
+}
+
+impl StateCache {
+    fn new() -> StateCache {
+        StateCache {
+            previous: HashMap::new()
+        }
+    }
+
+    fn set(&self, key: &GameState, value: &GameState) {
+
+    }
+
+    fn get(&self, key: &GameState) -> Option<&GameState> {
+        self.previous.get(key)
     }
 }
 
@@ -46,6 +72,7 @@ struct Game {
     circle_x: i32,
     circle_y: i32,
     circle_r: i32,
+    state_cache: StateCache,
 }
 
 impl Game {
@@ -58,7 +85,17 @@ impl Game {
             circle_x,
             circle_y,
             circle_r,
+            state_cache: StateCache::new()
         }
+    }
+
+    fn is_legal(gs: &GameState) -> bool {
+        // checks whether a given gamestate is legal
+        // only checks last move
+        // e.g. go one move back, check if move was possible
+        // we already assume that start and end coordinates are legal,
+        // only check circle
+        true
     }
 
     fn solve(&self) -> Vec<Coordinate> {
@@ -67,6 +104,21 @@ impl Game {
         stack.push(
             GameState::new(self.start_x, self.start_y)
         );
+        while let Some(top) = stack.pop() {
+            println!("{}", stack.len());
+            if top.checkpoint {
+                println!("{:?}", top);
+            }
+            if top.checkpoint && top.c.x == self.start_x && top.c.y == self.start_y {
+                break;
+            }
+            stack.extend(
+                top.children(self.width, self.height)
+                   .iter()
+                   .copied()
+                   .filter(Game::is_legal)
+            )
+        }
         return out;
     }
 }
@@ -94,21 +146,6 @@ fn main() {
     println!("{:?}", path);
 }
 
-// #include <iostream>
-
-// struct state {
-//     int x;
-//     int y;
-//     int vx;
-//     int vy;
-// };
-
-// const int WIDTH = 14;
-// const int HEIGHT = 14;
-// const int CIRCLE_X = 7;
-// const int CIRCLE_Y = 7;
-// const int CIRCLE_RADIUS = 3;
-
 // bool intersectsCircle(int sx, int sy, int ex, int ey) {
 //     sx -= CIRCLE_X;
 //     sy -= CIRCLE_Y;
@@ -116,9 +153,3 @@ fn main() {
 //     ey -= CIRCLE_Y;
 //     int a = (ex - sx)*(ex - sx) + (ey - sx)*(ey - sy);
 //     int b = 2
-
-// }
-
-// int main() {
-
-// }
