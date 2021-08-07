@@ -1,13 +1,14 @@
+#[derive(Clone, Copy)]
 pub struct Vector {
-    vx: i32,
-    vy: i32,
+    pub vx: i32,
+    pub vy: i32,
 }
 
 impl Vector {
-    fn zero() -> Vector {
+    pub fn zero() -> Vector {
         Vector { vx: 0, vy: 0 }
     }
-    fn neighbours(&self) -> [Vector; 9] {
+    pub fn children(&self, width: i32, height: i32) -> Vec<Vector> {
         let Vector { vx, vy } = *self;
         return [
             Vector { vx: vx, vy: vy },
@@ -31,6 +32,10 @@ impl Vector {
                 vx: vx + 1,
                 vy: vy + 1,
             },
-        ];
+        ]
+        .iter()
+        .copied()
+        .filter(|v| v.vx >= 0 && v.vy >= 0 && v.vx < width && v.vy < height)
+        .collect();
     }
 }

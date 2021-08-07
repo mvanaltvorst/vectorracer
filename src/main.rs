@@ -1,40 +1,97 @@
 mod vector;
+use vector::Vector;
 
-struct GameState {
+#[derive(Debug)]
+struct Coordinate {
     x: i32,
     y: i32,
-    v: vector::Vector,
+}
+
+impl Coordinate {
+    pub fn add(&self, vector: &Vector) -> Coordinate {
+        Coordinate{ x: self.x + vector.vx, y: self.y + vector.vy }
+    }
+}
+
+struct GameState {
+    c: Coordinate,
+    v: Vector,
+}
+
+impl GameState {
+    fn new(x: i32, y: i32) -> GameState {
+        GameState {
+            c: Coordinate { x, y },
+            v: Vector::zero(),
+        }
+    }
+
+    fn children(&self, width: i32, height: i32) -> Vec<GameState> {
+        self.v
+            .children(width, height)
+            .iter()
+            .map(|vector| GameState {
+                c: self.c.add(vector),
+                v: *vector,
+            })
+            .collect()
+    }
 }
 
 struct Game {
     width: i32,
-    height; i32,
+    height: i32,
+    start_x: i32,
+    start_y: i32,
     circle_x: i32,
     circle_y: i32,
-    circle_r: i32
+    circle_r: i32,
 }
 
 impl Game {
-    fn new(width: i32, height: i32, circle_x: i32, circle_y: i32, circle_r: i32) {
+    fn new(width: i32, height: i32, start_x: i32, start_y: i32, circle_x: i32, circle_y: i32, circle_r: i32) -> Game {
         Game {
             width,
             height,
+            start_x,
+            start_y,
             circle_x,
             circle_y,
-            circle_r
+            circle_r,
         }
+    }
+
+    fn solve(&self) -> Vec<Coordinate> {
+        let out: Vec<Coordinate> = Vec::new();
+        let mut stack: Vec<GameState> = Vec::new();
+        stack.push(
+            GameState::new(self.start_x, self.start_y)
+        );
+        return out;
     }
 }
 
 const WIDTH: i32 = 14;
 const HEIGHT: i32 = 14;
+const START_X: i32 = 7;
+const START_Y: i32 = 12;
 const CIRCLE_X: i32 = 7;
 const CIRCLE_Y: i32 = 7;
 const CIRCLE_R: i32 = 3;
 
 fn main() {
-    println!("Hello, world!");
-    let game = Game::new(WIDTH, HEIGHT, CIRCLE_X, CIRCLE_Y, CIRCLE_R);
+    let game = Game::new(
+        WIDTH,
+        HEIGHT, 
+        START_X,
+        START_Y,
+        CIRCLE_X,
+        CIRCLE_Y,
+        CIRCLE_R
+    );
+
+    let path = game.solve();
+    println!("{:?}", path);
 }
 
 // #include <iostream>
